@@ -59,8 +59,10 @@ function buildPiano(notes) {
     minNote = Math.floor(minNote / 12) * 12;
     maxNote = Math.ceil(maxNote / 12) * 12;
 
+    // Black keys are at semitone positions 1 (C#), 3 (D#), 6 (F#), 8 (G#), 10 (A#)
     const blackKeys = [1, 3, 6, 8, 10];
 
+    // First pass: create all white keys
     for (let midi = minNote; midi <= maxNote; midi++) {
         const noteInOctave = midi % 12;
         const octave = Math.floor(midi / 12) - 1;
@@ -75,6 +77,8 @@ function buildPiano(notes) {
         }
     }
 
+    // Second pass: insert black keys after their corresponding white keys
+    // Black keys go after: C->C#, D->D#, F->F#, G->G#, A->A#
     const whiteKeys = piano.querySelectorAll('.key:not(.black)');
     let whiteIndex = 0;
 
@@ -84,12 +88,16 @@ function buildPiano(notes) {
         const noteName = MIDI_TO_NOTE[noteInOctave] + octave;
 
         if (blackKeys.includes(noteInOctave)) {
+            // Insert black key after the PREVIOUS white key
             const key = document.createElement('div');
             key.className = 'key black';
             key.dataset.note = noteName;
             if (notes.includes(noteName)) key.classList.add('active');
-            if (whiteKeys[whiteIndex]) whiteKeys[whiteIndex].after(key);
+            if (whiteIndex > 0 && whiteKeys[whiteIndex - 1]) {
+                whiteKeys[whiteIndex - 1].after(key);
+            }
         } else {
+            // Move to next white key position
             whiteIndex++;
         }
     }
