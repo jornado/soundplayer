@@ -433,9 +433,16 @@ Add breathiness and texture:
 | | `reese` | Detuned bass (DnB/dubstep) |
 | | `acid303` | TB-303 style (acid/techno) |
 | | `bass808` | TR-808 bass (hip-hop/trap) |
+| | `sub` | Pure sine sub bass |
+| | `wobble` | LFO modulated bass |
+| | `fmbass` | FM synthesis bass |
 | | `pluck` | Plucked string |
 | | `pad` | Soft sustained |
 | | `lead` | Square wave melody |
+| | `organ` | Sustained organ tone |
+| | `strings` | Slow attack string pad |
+| | `brass` | Brass stab sound |
+| | `bell` | FM bell/chime |
 | `note` | Note + octave | `C3`, `E1`, `G4` |
 
 ### FX Parameters
@@ -444,7 +451,9 @@ Add breathiness and texture:
 |-------|--------|-------------|
 | `fx` | `riser` | 2-bar noise build |
 | | `sweep` | 4-bar filter sweep |
+| | `downlifter` | Falling noise sweep |
 | | `impact` | Downbeat hit |
+| | `boom` | Low sub impact |
 
 ### Waveform Parameters
 
@@ -522,6 +531,91 @@ Add breathiness and texture:
 | `wave` | Waveform type | Base wave for effects (default: sawtooth) |
 | `note` | Note + octave | Pitch to play (default: C3) |
 
+### Spatial Effects Parameters
+
+| Param | Values | Description |
+|-------|--------|-------------|
+| `reverb` | `room`, `hall`, `plate`, `cathedral` | Reverb type (adds space/depth) |
+| `delay` | `8n`, `4n`, `16n`, etc. | Delay time (rhythmic notation) |
+| `feedback` | `0`-`0.9` | Delay feedback amount |
+| `chorus` | `0`-`1` | Chorus depth (0.3=subtle, 0.6=lush, 0.9=thick) |
+| `phaser` | `0.1`-`5` | Phaser rate in Hz (0.3=slow, 1=medium, 3=fast) |
+| `pan` | `0`-`1` | Stereo position (0=left, 0.5=center, 1=right) |
+| `sidechain` | `2`-`16` | Number of pumping beats |
+| `bpm` | `60`-`200` | Tempo for sidechain effect |
+
+### Advanced Synthesis Parameters
+
+| Param | Values | Description |
+|-------|--------|-------------|
+| `fm` | Any value | Enable FM synthesis mode |
+| `ratio` | `0.5`-`16` | Carrier:modulator frequency ratio |
+| `mod` | `0`-`20` | Modulation index (higher=more harmonics) |
+| `ringmod` | `100`-`2000` | Ring modulator frequency in Hz |
+| `pwm` | `0.1`-`0.9` | Initial pulse width |
+| `rate` | `0.1`-`10` | PWM modulation rate in Hz |
+| `formant` | `a`, `e`, `i`, `o`, `u` | Vowel formant synthesis |
+
+### Rhythm & Timing Parameters
+
+| Param | Values | Description |
+|-------|--------|-------------|
+| `metronome` | `40`-`240` | BPM for metronome clicks |
+| `beats` | `1`-`32` | Number of clicks to play |
+| `accent` | `2`-`8` | Accent every N beats (default: 4) |
+| `timesig` | `4/4`, `3/4`, `6/8`, `5/4`, `7/8`, etc. | Time signature to demonstrate |
+| `poly` | `3:2`, `4:3`, `5:4`, `5:3`, `7:4` | Polyrhythm to demonstrate |
+| `swing` | `0`-`1` | Swing amount (0=straight, 0.5=medium, 0.8=heavy shuffle) |
+| `bars` | `1`-`4` | Number of bars to play |
+
+### Music Theory Parameters
+
+| Param | Values | Description |
+|-------|--------|-------------|
+| `chord` + `inversion` | `1`, `2`, `3` | Chord inversion (1st, 2nd, 3rd) |
+| `voicelead` | Chord progression | Smooth voice leading demo (e.g., `C,Am,F,G`) |
+| `circle` | `fifths` | Circle of fifths progression |
+| `start` | Note name | Starting key for circle (default: C) |
+| `steps` | `1`-`12` | How many keys around the circle |
+
+### Arpeggiator Parameters
+
+| Param | Values | Description |
+|-------|--------|-------------|
+| `arp` | `up`, `down`, `updown`, `downup`, `random` | Arpeggio pattern |
+| `chord` | Chord name | Chord to arpeggiate (e.g., `Cm7`) |
+| `rate` | `4`, `8`, `16`, `32` | Note rate (default: 8 = 8th notes) |
+| `octaves` | `1`-`3` | Octave range for arpeggio |
+
+### Bassline Parameters
+
+| Param | Values | Description |
+|-------|--------|-------------|
+| `bassline` | `acid`, `house`, `funk`, `disco` | Bassline pattern style |
+| `root` | Note name | Root note (default: C) |
+| `octave` | `1`-`3` | Bass octave (default: 2) |
+
+### Melody Parameters
+
+| Param | Values | Description |
+|-------|--------|-------------|
+| `melody` | `pentatonic`, `blues`, `jazz`, `trance` | Melodic phrase style |
+| `root` | Note name | Starting note (default: C) |
+| `octave` | `3`-`5` | Melody octave (default: 4) |
+
+### Genre Preset Parameters
+
+| Param | Values | Description |
+|-------|--------|-------------|
+| `genre` | `lofi` | Lo-fi: bitcrushed triangle, slow BPM |
+| | `synthwave` | Synthwave: chorused saw, delay |
+| | `techno` | Techno: aggressive saw, fast |
+| | `ambient` | Ambient: slow sine, lots of reverb |
+| | `dubstep` | Dubstep: driven saw, bitcrush |
+| | `house` | House: chorused saw, 124 BPM |
+| | `trap` | Trap: square wave, 140 BPM |
+| | `dnb` | Drum & Bass: driven saw, 174 BPM |
+
 ### Compare Mode
 
 | Param | Values | Shows |
@@ -529,6 +623,7 @@ Add breathiness and texture:
 | `compare` | `waves` | 4 waveforms side-by-side |
 | | `filters` | 4 filter types |
 | | `envelopes` | 4 envelope presets |
+| | `modes` | 7 church modes (use with `root=`) |
 
 ### Display Parameters
 
@@ -608,6 +703,13 @@ router.js        → all modules
 1. **New chord type**: Add to `CHORD_TYPES` in `data.js`
 2. **New scale**: Add to `SCALE_TYPES` in `data.js`
 3. **New drum pattern**: Add to `DRUM_PATTERNS` in `data.js`
-4. **New instrument**: Add to `initAudio()` in `instruments.js`
-5. **New effect**: Add to `effects.js` and handle in `router.js`
-6. **New URL parameter**: Add case in `init()` in `router.js`
+4. **New time signature**: Add to `TIME_SIGNATURES` in `data.js`
+5. **New polyrhythm**: Add to `POLYRHYTHMS` in `data.js`
+6. **New arpeggio pattern**: Add to `ARP_PATTERNS` in `data.js`
+7. **New bassline**: Add to `BASSLINE_PATTERNS` in `data.js`
+8. **New melody phrase**: Add to `MELODY_PHRASES` in `data.js`
+9. **New genre preset**: Add to `GENRE_PRESETS` in `data.js`
+10. **New vowel formant**: Add to `FORMANTS` in `data.js`
+11. **New instrument**: Add to `initAudio()` in `instruments.js`
+12. **New effect**: Add to `effects.js` and handle in `router.js`
+13. **New URL parameter**: Add case in `init()` in `router.js`

@@ -575,6 +575,414 @@ function init() {
             document.getElementById('description').textContent = 'Tap each to hear';
             document.getElementById('playBtn').style.display = 'none';
         }
+        // MODES COMPARE
+        else if (compareType === 'modes') {
+            const root = params.get('root') || 'C';
+            const modes = ['ionian', 'dorian', 'phrygian', 'lydian', 'mixolydian', 'aeolian', 'locrian'];
+            modes.forEach(mode => {
+                const item = document.createElement('div');
+                item.className = 'compare-item';
+                const label = document.createElement('div');
+                label.className = 'compare-label';
+                label.textContent = mode.charAt(0).toUpperCase() + mode.slice(1);
+                label.style.padding = '15px 5px';
+                item.appendChild(label);
+                grid.appendChild(item);
+
+                item.addEventListener('click', () => {
+                    const intervals = SCALE_TYPES[mode];
+                    const rootMidi = NOTE_TO_MIDI[root] + 60;
+                    const notes = [...intervals, 12].map(i => midiToNote(rootMidi + i));
+                    playScale(notes);
+                });
+            });
+
+            document.getElementById('soundType').textContent = 'Compare';
+            document.getElementById('soundName').textContent = `${root} Modes`;
+            document.getElementById('description').textContent = 'Tap each to hear';
+            document.getElementById('playBtn').style.display = 'none';
+        }
+    }
+
+    // ============ NEW FEATURES ============
+
+    // METRONOME MODE
+    else if (params.has('metronome')) {
+        const bpm = parseInt(params.get('metronome')) || 120;
+        const beats = parseInt(params.get('beats')) || 8;
+        const accent = parseInt(params.get('accent')) || 4;
+
+        document.getElementById('soundType').textContent = 'Metronome';
+        document.getElementById('soundName').textContent = `${bpm} BPM`;
+        document.getElementById('description').textContent = `${beats} beats • Accent every ${accent}`;
+
+        document.getElementById('visualizer').classList.remove('hidden');
+        playFn = () => playMetronome(bpm, beats, accent);
+    }
+
+    // TIME SIGNATURE MODE
+    else if (params.has('timesig')) {
+        const timeSig = params.get('timesig');
+        const bpm = parseInt(params.get('bpm')) || 100;
+        const bars = parseInt(params.get('bars')) || 2;
+
+        document.getElementById('soundType').textContent = 'Time Signature';
+        document.getElementById('soundName').textContent = timeSig;
+        document.getElementById('description').textContent = `${bpm} BPM • ${bars} bars`;
+
+        document.getElementById('visualizer').classList.remove('hidden');
+        playFn = () => playTimeSignature(timeSig, bpm, bars);
+    }
+
+    // POLYRHYTHM MODE
+    else if (params.has('poly')) {
+        const polyType = params.get('poly');
+        const bpm = parseInt(params.get('bpm')) || 90;
+        const bars = parseInt(params.get('bars')) || 2;
+        const poly = POLYRHYTHMS[polyType] || POLYRHYTHMS['3:2'];
+
+        document.getElementById('soundType').textContent = 'Polyrhythm';
+        document.getElementById('soundName').textContent = poly.name;
+        document.getElementById('description').textContent = `${poly.desc} • ${bpm} BPM`;
+
+        document.getElementById('visualizer').classList.remove('hidden');
+        playFn = () => playPolyrhythm(polyType, bpm, bars);
+    }
+
+    // SWING MODE
+    else if (params.has('swing')) {
+        const swingAmount = parseFloat(params.get('swing')) || 0.5;
+        const bpm = parseInt(params.get('bpm')) || 100;
+
+        document.getElementById('soundType').textContent = 'Swing/Shuffle';
+        document.getElementById('soundName').textContent = swingAmount < 0.3 ? 'Light Swing' : swingAmount < 0.6 ? 'Medium Swing' : 'Heavy Shuffle';
+        document.getElementById('description').textContent = `${Math.round(swingAmount * 100)}% • ${bpm} BPM`;
+
+        document.getElementById('visualizer').classList.remove('hidden');
+        playFn = () => playWithSwing(swingAmount, bpm);
+    }
+
+    // REVERB MODE
+    else if (params.has('reverb')) {
+        const reverbType = params.get('reverb').toLowerCase();
+        const note = params.get('note') || 'C4';
+        const names = { room: 'Room', hall: 'Hall', plate: 'Plate', cathedral: 'Cathedral' };
+
+        document.getElementById('soundType').textContent = 'Reverb';
+        document.getElementById('soundName').textContent = names[reverbType] || reverbType;
+        document.getElementById('description').textContent = 'Spatial depth effect';
+
+        document.getElementById('waveform').classList.remove('hidden');
+        playFn = () => playWithReverb(reverbType, note);
+    }
+
+    // DELAY MODE
+    else if (params.has('delay')) {
+        const delayTime = params.get('delay') || '8n';
+        const feedback = parseFloat(params.get('feedback')) || 0.4;
+        const note = params.get('note') || 'C4';
+
+        document.getElementById('soundType').textContent = 'Delay';
+        document.getElementById('soundName').textContent = `${delayTime} Echo`;
+        document.getElementById('description').textContent = `Feedback: ${Math.round(feedback * 100)}%`;
+
+        document.getElementById('waveform').classList.remove('hidden');
+        playFn = () => playWithDelay(delayTime, feedback, note);
+    }
+
+    // CHORUS MODE
+    else if (params.has('chorus')) {
+        const depth = parseFloat(params.get('chorus')) || 0.5;
+        const note = params.get('note') || 'C3';
+
+        document.getElementById('soundType').textContent = 'Chorus';
+        document.getElementById('soundName').textContent = depth < 0.3 ? 'Subtle' : depth < 0.6 ? 'Lush' : 'Thick';
+        document.getElementById('description').textContent = `Depth: ${Math.round(depth * 100)}%`;
+
+        document.getElementById('waveform').classList.remove('hidden');
+        playFn = () => playWithChorus(depth, note);
+    }
+
+    // PHASER MODE
+    else if (params.has('phaser')) {
+        const rate = parseFloat(params.get('phaser')) || 0.5;
+        const note = params.get('note') || 'C3';
+
+        document.getElementById('soundType').textContent = 'Phaser';
+        document.getElementById('soundName').textContent = rate < 0.3 ? 'Slow Sweep' : rate < 1 ? 'Medium' : 'Fast Jet';
+        document.getElementById('description').textContent = `Rate: ${rate.toFixed(1)} Hz`;
+
+        document.getElementById('waveform').classList.remove('hidden');
+        playFn = () => playWithPhaser(rate, note);
+    }
+
+    // PANNING MODE
+    else if (params.has('pan')) {
+        const panValue = parseFloat(params.get('pan')) || 0.5;
+        const note = params.get('note') || 'C4';
+        const position = panValue < 0.33 ? 'Left' : panValue > 0.66 ? 'Right' : 'Center';
+
+        document.getElementById('soundType').textContent = 'Panning';
+        document.getElementById('soundName').textContent = position;
+        document.getElementById('description').textContent = `Position: ${Math.round((panValue - 0.5) * 200)}%`;
+
+        document.getElementById('waveform').classList.remove('hidden');
+        playFn = () => playWithPanning(panValue, note);
+    }
+
+    // SIDECHAIN MODE
+    else if (params.has('sidechain')) {
+        const pumpBeats = parseInt(params.get('sidechain')) || 4;
+        const bpm = parseInt(params.get('bpm')) || 128;
+
+        document.getElementById('soundType').textContent = 'Sidechain';
+        document.getElementById('soundName').textContent = 'Pumping Effect';
+        document.getElementById('description').textContent = `${pumpBeats} beats • ${bpm} BPM`;
+
+        document.getElementById('visualizer').classList.remove('hidden');
+        playFn = () => playSidechain(pumpBeats, bpm);
+    }
+
+    // FM SYNTHESIS MODE
+    else if (params.has('fm')) {
+        const ratio = parseFloat(params.get('ratio')) || 2;
+        const modIndex = parseFloat(params.get('mod')) || 5;
+        const note = params.get('note') || 'C4';
+
+        document.getElementById('soundType').textContent = 'FM Synthesis';
+        document.getElementById('soundName').textContent = `Ratio ${ratio}:1`;
+        document.getElementById('description').textContent = `Mod Index: ${modIndex}`;
+
+        document.getElementById('waveform').classList.remove('hidden');
+        playFn = () => playFM(ratio, modIndex, note);
+    }
+
+    // RING MODULATION MODE
+    else if (params.has('ringmod')) {
+        const modFreq = parseFloat(params.get('ringmod')) || 440;
+        const note = params.get('note') || 'C4';
+
+        document.getElementById('soundType').textContent = 'Ring Modulation';
+        document.getElementById('soundName').textContent = `${modFreq} Hz`;
+        document.getElementById('description').textContent = 'Metallic/bell-like effect';
+
+        document.getElementById('waveform').classList.remove('hidden');
+        playFn = () => playRingMod(modFreq, note);
+    }
+
+    // PWM MODE
+    else if (params.has('pwm')) {
+        const pulseWidth = parseFloat(params.get('pwm')) || 0.5;
+        const rate = parseFloat(params.get('rate')) || 2;
+        const note = params.get('note') || 'C4';
+
+        document.getElementById('soundType').textContent = 'PWM';
+        document.getElementById('soundName').textContent = 'Pulse Width Mod';
+        document.getElementById('description').textContent = `Width: ${Math.round(pulseWidth * 100)}% • Rate: ${rate}Hz`;
+
+        document.getElementById('waveform').classList.remove('hidden');
+        playFn = () => playPWM(pulseWidth, rate, note);
+    }
+
+    // FORMANT MODE
+    else if (params.has('formant')) {
+        const vowel = params.get('formant').toLowerCase();
+        const note = params.get('note') || 'C3';
+        const vowelNames = { a: '"Ah"', e: '"Eh"', i: '"Ee"', o: '"Oh"', u: '"Oo"' };
+
+        document.getElementById('soundType').textContent = 'Formant';
+        document.getElementById('soundName').textContent = vowelNames[vowel] || vowel;
+        document.getElementById('description').textContent = 'Vowel synthesis';
+
+        document.getElementById('waveform').classList.remove('hidden');
+        playFn = () => playFormant(vowel, note);
+    }
+
+    // INVERSION MODE
+    else if (params.has('inversion')) {
+        const chordStr = params.get('chord') || 'C';
+        const inversion = parseInt(params.get('inversion')) || 1;
+        const octave = parseInt(params.get('octave')) || 4;
+
+        const match = chordStr.match(/^([A-G][#b]?)(.*)$/i);
+        if (match) {
+            let [, root, type] = match;
+            root = root.charAt(0).toUpperCase() + root.slice(1);
+            type = type.toLowerCase();
+            const intervals = CHORD_TYPES[type] || CHORD_TYPES[''];
+            const invertedIntervals = getChordInversion(intervals, inversion);
+            const rootMidi = NOTE_TO_MIDI[root] + (octave + 1) * 12;
+            const notes = invertedIntervals.map(i => midiToNote(rootMidi + i));
+
+            const ordinalNames = ['Root', '1st', '2nd', '3rd'];
+            document.getElementById('soundType').textContent = 'Chord Inversion';
+            document.getElementById('soundName').textContent = `${root}${type || ''} ${ordinalNames[inversion] || inversion + 'th'} Inv`;
+            document.getElementById('description').textContent = notes.join(' • ');
+
+            buildPiano(notes);
+            playFn = () => playChord(notes);
+        }
+    }
+
+    // VOICE LEADING MODE
+    else if (params.has('voicelead')) {
+        const progStr = params.get('voicelead');
+        const chordStrs = progStr.split(',').map(s => s.trim());
+        const octave = parseInt(params.get('octave')) || 4;
+
+        const chords = chordStrs.map(chordStr => {
+            const match = chordStr.match(/^([A-G][#b]?)(.*)$/i);
+            if (!match) return null;
+            let [, root, type] = match;
+            root = root.charAt(0).toUpperCase() + root.slice(1);
+            type = type.toLowerCase();
+            return { root, type, intervals: CHORD_TYPES[type] || CHORD_TYPES[''] };
+        }).filter(Boolean);
+
+        if (chords.length >= 2) {
+            document.getElementById('soundType').textContent = 'Voice Leading';
+            document.getElementById('soundName').textContent = chordStrs.join(' → ');
+            document.getElementById('description').textContent = 'Smooth chord transitions';
+
+            const firstRootMidi = NOTE_TO_MIDI[chords[0].root] + (octave + 1) * 12;
+            const firstNotes = chords[0].intervals.map(i => midiToNote(firstRootMidi + i));
+            buildPiano(firstNotes);
+
+            playFn = async () => {
+                await initAudio();
+                setPlaying(true);
+
+                let currentNotes = chords[0].intervals.map(i => firstRootMidi + i);
+
+                for (let i = 0; i < chords.length; i++) {
+                    const chord = chords[i];
+                    const rootMidi = NOTE_TO_MIDI[chord.root] + (octave + 1) * 12;
+
+                    if (i === 0) {
+                        currentNotes = chord.intervals.map(int => rootMidi + int);
+                    } else {
+                        currentNotes = getVoiceLeading(currentNotes, chord.intervals, rootMidi);
+                    }
+
+                    const noteNames = currentNotes.map(m => midiToNote(m));
+                    buildPiano(noteNames);
+                    instruments.poly.triggerAttackRelease(noteNames, '2n');
+
+                    if (i < chords.length - 1) {
+                        await new Promise(r => setTimeout(r, 1000));
+                    }
+                }
+
+                setTimeout(() => setPlaying(false), 500);
+            };
+        }
+    }
+
+    // CIRCLE OF FIFTHS MODE
+    else if (params.has('circle')) {
+        const circleType = params.get('circle');
+        const start = params.get('start') || 'C';
+        const steps = parseInt(params.get('steps')) || 12;
+
+        document.getElementById('soundType').textContent = 'Circle of Fifths';
+        document.getElementById('soundName').textContent = `Starting from ${start}`;
+        document.getElementById('description').textContent = `${steps} keys around the circle`;
+
+        const startIndex = CIRCLE_OF_FIFTHS.indexOf(start);
+        const playKeys = [];
+        for (let i = 0; i < steps; i++) {
+            playKeys.push(CIRCLE_OF_FIFTHS[(startIndex + i) % 12]);
+        }
+
+        playFn = async () => {
+            await initAudio();
+            setPlaying(true);
+
+            for (let i = 0; i < playKeys.length; i++) {
+                const key = playKeys[i];
+                const rootMidi = NOTE_TO_MIDI[key] + 60;
+                const notes = [0, 4, 7].map(int => midiToNote(rootMidi + int));
+
+                buildPiano(notes);
+                instruments.poly.triggerAttackRelease(notes, '4n');
+
+                if (i < playKeys.length - 1) {
+                    await new Promise(r => setTimeout(r, 500));
+                }
+            }
+
+            setTimeout(() => setPlaying(false), 500);
+        };
+    }
+
+    // ARPEGGIATOR MODE
+    else if (params.has('arp')) {
+        const pattern = params.get('arp').toLowerCase();
+        const chordStr = params.get('chord') || 'C';
+        const rate = parseInt(params.get('rate')) || 8;
+        const octaves = parseInt(params.get('octaves')) || 1;
+
+        const match = chordStr.match(/^([A-G][#b]?)(.*)$/i);
+        if (match) {
+            let [, root, type] = match;
+            root = root.charAt(0).toUpperCase() + root.slice(1);
+            type = type.toLowerCase();
+            const intervals = CHORD_TYPES[type] || CHORD_TYPES[''];
+            const rootMidi = NOTE_TO_MIDI[root] + 60;
+            const notes = intervals.map(i => midiToNote(rootMidi + i));
+
+            const arpInfo = ARP_PATTERNS[pattern] || ARP_PATTERNS['up'];
+            document.getElementById('soundType').textContent = 'Arpeggiator';
+            document.getElementById('soundName').textContent = `${root}${type || ''} ${arpInfo.name}`;
+            document.getElementById('description').textContent = `Rate: 1/${rate} • ${octaves} octave${octaves > 1 ? 's' : ''}`;
+
+            buildPiano(notes);
+            playFn = () => playArpeggio(notes, pattern, rate, octaves);
+        }
+    }
+
+    // BASSLINE MODE
+    else if (params.has('bassline')) {
+        const patternName = params.get('bassline').toLowerCase();
+        const root = params.get('root') || 'C';
+        const octave = parseInt(params.get('octave')) || 2;
+        const pattern = BASSLINE_PATTERNS[patternName] || BASSLINE_PATTERNS['acid'];
+
+        document.getElementById('soundType').textContent = 'Bassline';
+        document.getElementById('soundName').textContent = pattern.name;
+        document.getElementById('description').textContent = `${root}${octave} • ${pattern.bpm} BPM`;
+
+        document.getElementById('waveform').classList.remove('hidden');
+        playFn = () => playBassline(patternName, root, octave);
+    }
+
+    // MELODY MODE
+    else if (params.has('melody')) {
+        const phraseName = params.get('melody').toLowerCase();
+        const root = params.get('root') || 'C';
+        const octave = parseInt(params.get('octave')) || 4;
+        const phrase = MELODY_PHRASES[phraseName] || MELODY_PHRASES['pentatonic'];
+
+        document.getElementById('soundType').textContent = 'Melody';
+        document.getElementById('soundName').textContent = phrase.name;
+        document.getElementById('description').textContent = `${root}${octave} • ${phrase.notes.length} notes`;
+
+        document.getElementById('waveform').classList.remove('hidden');
+        playFn = () => playMelody(phraseName, root, octave);
+    }
+
+    // GENRE MODE
+    else if (params.has('genre')) {
+        const genreName = params.get('genre').toLowerCase();
+        const note = params.get('note') || 'C3';
+        const preset = GENRE_PRESETS[genreName] || GENRE_PRESETS['lofi'];
+
+        document.getElementById('soundType').textContent = 'Genre';
+        document.getElementById('soundName').textContent = preset.name;
+        document.getElementById('description').textContent = `${preset.bpm} BPM characteristic sound`;
+
+        document.getElementById('waveform').classList.remove('hidden');
+        playFn = () => playGenre(genreName, note);
     }
 
     // DEFAULT - No sound specified
@@ -589,46 +997,57 @@ function init() {
         helpPanel.id = 'helpPanel';
         helpPanel.innerHTML = `
             <div class="help-section">
-                <div class="help-title">🎹 Chords & Progressions</div>
+                <div class="help-title">🎹 Chords & Theory</div>
                 <code>?chord=Cmaj7</code>
                 <code>?progression=Am,F,C,G</code>
+                <code>?chord=C&inversion=1</code>
+                <code>?voicelead=C,Am,F,G</code>
+                <code>?circle=fifths&start=C</code>
             </div>
             <div class="help-section">
                 <div class="help-title">🎼 Scales & Intervals</div>
                 <code>?scale=dorian&root=D</code>
                 <code>?interval=tritone&root=C</code>
+                <code>?compare=modes&root=C</code>
             </div>
             <div class="help-section">
-                <div class="help-title">🥁 Drums & Patterns</div>
+                <div class="help-title">🥁 Rhythm & Timing</div>
                 <code>?pattern=four-on-floor</code>
-                <code>?kick=1,3&snare=2,4&hihat=8ths</code>
+                <code>?metronome=120&beats=8</code>
+                <code>?timesig=6/8&bpm=100</code>
+                <code>?poly=3:2&bpm=90</code>
+                <code>?swing=0.6&bpm=100</code>
             </div>
             <div class="help-section">
-                <div class="help-title">〰️ Waveforms</div>
+                <div class="help-title">🎵 Sequences</div>
+                <code>?arp=up&chord=Cm7&rate=8</code>
+                <code>?bassline=acid&root=C</code>
+                <code>?melody=pentatonic&root=A</code>
+            </div>
+            <div class="help-section">
+                <div class="help-title">〰️ Synthesis</div>
                 <code>?wave=saw</code>
-                <code>?compare=waves</code>
-            </div>
-            <div class="help-section">
-                <div class="help-title">🔻 Filters</div>
-                <code>?filter=lowpass&cutoff=1000</code>
-                <code>?sweep=lowpass&from=200&to=8000</code>
-            </div>
-            <div class="help-section">
-                <div class="help-title">📈 Envelopes & LFO</div>
-                <code>?envelope=pluck</code>
-                <code>?lfo=tremolo&rate=6</code>
-            </div>
-            <div class="help-section">
-                <div class="help-title">🎛️ Synths & FX</div>
-                <code>?synth=supersaw&note=C3</code>
-                <code>?harmonics=1,0.5,0.33</code>
+                <code>?fm=ratio&ratio=2&mod=5</code>
+                <code>?ringmod=440</code>
+                <code>?pwm=0.5&rate=2</code>
+                <code>?formant=a</code>
             </div>
             <div class="help-section">
                 <div class="help-title">🔊 Effects</div>
+                <code>?reverb=hall</code>
+                <code>?delay=8n&feedback=0.4</code>
+                <code>?chorus=0.5</code>
+                <code>?phaser=0.5</code>
+                <code>?sidechain=4&bpm=128</code>
+                <code>?pan=0.8</code>
+            </div>
+            <div class="help-section">
+                <div class="help-title">🎛️ Sound Design</div>
                 <code>?drive=0.5</code>
                 <code>?unison=7&detune=0.3</code>
                 <code>?bitcrush=6</code>
                 <code>?noise=0.3</code>
+                <code>?genre=lofi</code>
             </div>
         `;
         helpPanel.style.cssText = `
