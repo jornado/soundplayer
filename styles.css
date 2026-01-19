@@ -432,7 +432,7 @@ body.compact {
 /* Melody Roll Visualization */
 .melody-roll {
     margin-top: 14px;
-    height: 100px;
+    height: 110px;
     background: rgba(0,0,0,0.3);
     border-radius: 8px;
     position: relative;
@@ -440,8 +440,56 @@ body.compact {
 }
 
 .compact .melody-roll {
-    height: 70px;
+    height: 80px;
     margin-top: 8px;
+}
+
+.melody-roll-wrapper {
+    display: flex;
+    height: 100%;
+}
+
+.melody-pitch-labels {
+    display: flex;
+    flex-direction: column;
+    width: 28px;
+    flex-shrink: 0;
+    background: rgba(0,0,0,0.2);
+    border-right: 1px solid rgba(255,255,255,0.1);
+}
+
+.compact .melody-pitch-labels {
+    width: 22px;
+}
+
+.melody-pitch-label {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    color: rgba(255,255,255,0.5);
+    font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+.compact .melody-pitch-label {
+    font-size: 7px;
+}
+
+.melody-pitch-label.root {
+    color: #4ade80;
+    font-weight: bold;
+}
+
+.melody-pitch-label.accidental {
+    color: rgba(255,255,255,0.3);
+    font-size: 7px;
+}
+
+.melody-roll-area {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
 }
 
 .melody-lanes {
@@ -457,17 +505,23 @@ body.compact {
 }
 
 .melody-lane.octave-line {
-    border-bottom-color: rgba(255,255,255,0.15);
+    border-bottom-color: rgba(74, 222, 128, 0.3);
+}
+
+.melody-lane.black-key {
+    background: rgba(0,0,0,0.15);
 }
 
 .melody-notes {
     position: absolute;
-    inset: 8px;
+    inset: 4px 8px;
 }
 
 .melody-note {
     position: absolute;
-    height: 12px;
+    height: calc(100% / var(--lane-count, 8) - 2px);
+    min-height: 8px;
+    max-height: 14px;
     background: var(--note-color, #e94560);
     border-radius: 3px;
     transform: translateY(50%);
@@ -477,41 +531,29 @@ body.compact {
 }
 
 .compact .melody-note {
-    height: 8px;
+    max-height: 10px;
 }
 
 .melody-note.playing {
     opacity: 1;
-    transform: translateY(50%) scale(1.15);
+    transform: translateY(50%) scale(1.1);
     box-shadow: 0 0 16px var(--note-color, #e94560), 0 0 24px var(--note-color, #e94560);
     filter: brightness(1.4) !important;
+    z-index: 10;
 }
 
-.melody-contour {
+.melody-beat-grid {
     position: absolute;
-    inset: 8px;
+    inset: 0;
     pointer-events: none;
 }
 
-.melody-beats {
-    position: absolute;
-    bottom: 0;
-    left: 8px;
-    right: 8px;
-    height: 100%;
-    pointer-events: none;
-}
-
-.melody-beat-marker {
+.melody-beat-line {
     position: absolute;
     top: 0;
     bottom: 0;
     width: 1px;
-    background: rgba(255,255,255,0.1);
-}
-
-.melody-beat-marker.minor {
-    background: rgba(255,255,255,0.05);
+    background: rgba(255,255,255,0.08);
 }
 
 /* Delay Visualization */

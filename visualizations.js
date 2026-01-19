@@ -336,35 +336,81 @@ function drawMelodyRoll(container, notes, durations, rootName = 'C', color = '#e
     container.innerHTML = '';
     container.classList.remove('hidden');
 
+    // Note names for labeling
+    const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+
+    // Get root note index
+    const rootIndex = NOTE_NAMES.indexOf(rootName.replace('b', '#').charAt(0).toUpperCase() +
+        (rootName.length > 1 ? rootName.charAt(1) : ''));
+    const rootIdx = rootIndex >= 0 ? rootIndex : 0;
+
     // Calculate pitch range for scaling
     const minNote = Math.min(...notes);
     const maxNote = Math.max(...notes);
-    const range = maxNote - minNote || 12; // Default to octave if all same note
 
     // Total duration for time scaling
     const totalDuration = durations.reduce((a, b) => a + b, 0);
+
+    // Determine semitones to show (pad by 1 on each side)
+    const paddedMin = minNote - 1;
+    const paddedMax = maxNote + 1;
+    const semitoneRange = paddedMax - paddedMin;
+
+    // Create wrapper with label column
+    const wrapper = document.createElement('div');
+    wrapper.className = 'melody-roll-wrapper';
+
+    // Create pitch labels column
+    const labelsColumn = document.createElement('div');
+    labelsColumn.className = 'melody-pitch-labels';
+
+    for (let i = 0; i <= semitoneRange; i++) {
+        const semitone = paddedMax - i;
+        const noteIndex = (rootIdx + semitone) % 12;
+        const noteName = NOTE_NAMES[noteIndex < 0 ? noteIndex + 12 : noteIndex];
+
+        const label = document.createElement('div');
+        label.className = 'melody-pitch-label';
+        label.textContent = noteName;
+
+        // Highlight root notes
+        if (semitone % 12 === 0) {
+            label.classList.add('root');
+        }
+        // Dim accidentals slightly
+        if (noteName.includes('#')) {
+            label.classList.add('accidental');
+        }
+
+        labelsColumn.appendChild(label);
+    }
+    wrapper.appendChild(labelsColumn);
+
+    // Create main roll area
+    const rollArea = document.createElement('div');
+    rollArea.className = 'melody-roll-area';
 
     // Create piano roll lanes (pitch markers)
     const laneContainer = document.createElement('div');
     laneContainer.className = 'melody-lanes';
 
-    // Determine semitones to show
-    const paddedMin = minNote - 2;
-    const paddedMax = maxNote + 2;
-    const semitoneRange = paddedMax - paddedMin;
-
-    // Create horizontal pitch lines
     for (let i = 0; i <= semitoneRange; i++) {
         const lane = document.createElement('div');
         lane.className = 'melody-lane';
         const semitone = paddedMax - i;
-        // Highlight octave lines
+        // Highlight root note lanes
         if (semitone % 12 === 0) {
             lane.classList.add('octave-line');
         }
+        // Mark black key rows
+        const noteIndex = (rootIdx + semitone) % 12;
+        const noteName = NOTE_NAMES[noteIndex < 0 ? noteIndex + 12 : noteIndex];
+        if (noteName.includes('#')) {
+            lane.classList.add('black-key');
+        }
         laneContainer.appendChild(lane);
     }
-    container.appendChild(laneContainer);
+    rollArea.appendChild(laneContainer);
 
     // Create note blocks
     const notesContainer = document.createElement('div');
@@ -382,65 +428,34 @@ function drawMelodyRoll(container, notes, durations, rootName = 'C', color = '#e
         const bottom = ((semitone - paddedMin) / semitoneRange) * 100;
 
         block.style.left = `${left}%`;
-        block.style.width = `${Math.max(width - 0.5, 1)}%`;
+        block.style.width = `${Math.max(width - 0.5, 2)}%`;
         block.style.bottom = `${bottom}%`;
         block.style.setProperty('--note-color', color);
 
-        // Color variation based on pitch
-        const hueShift = (semitone % 12) * 15;
-        block.style.filter = `hue-rotate(${hueShift}deg)`;
+        // Add note name as tooltip/label
+        const noteIndex = (rootIdx + semitone) % 12;
+        const noteName = NOTE_NAMES[noteIndex < 0 ? noteIndex + 12 : noteIndex];
+        block.title = noteName;
 
         notesContainer.appendChild(block);
         currentTime += durations[i];
     });
-    container.appendChild(notesContainer);
+    rollArea.appendChild(notesContainer);
 
-    // Add contour line connecting notes
-    const contourSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    contourSvg.classList.add('melody-contour');
-    contourSvg.setAttribute('viewBox', '0 0 100 100');
-    contourSvg.setAttribute('preserveAspectRatio', 'none');
-
-    // Build path
-    let pathD = '';
-    currentTime = 0;
-    notes.forEach((semitone, i) => {
-        const x = ((currentTime + durations[i] / 2) / totalDuration) * 100;
-        const y = 100 - ((semitone - paddedMin) / semitoneRange) * 100;
-
-        if (i === 0) {
-            pathD = `M ${x} ${y}`;
-        } else {
-            pathD += ` L ${x} ${y}`;
-        }
-        currentTime += durations[i];
-    });
-
-    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    path.setAttribute('d', pathD);
-    path.setAttribute('stroke', color);
-    path.setAttribute('stroke-width', '1.5');
-    path.setAttribute('fill', 'none');
-    path.setAttribute('stroke-linecap', 'round');
-    path.setAttribute('stroke-linejoin', 'round');
-    path.setAttribute('opacity', '0.6');
-    contourSvg.appendChild(path);
-    container.appendChild(contourSvg);
-
-    // Add beat markers
-    const beatMarkers = document.createElement('div');
-    beatMarkers.className = 'melody-beats';
+    // Add beat grid lines
+    const beatGrid = document.createElement('div');
+    beatGrid.className = 'melody-beat-grid';
     const beats = Math.ceil(totalDuration);
-    for (let i = 0; i <= beats; i++) {
-        const marker = document.createElement('div');
-        marker.className = 'melody-beat-marker';
-        marker.style.left = `${(i / totalDuration) * 100}%`;
-        if (i > 0 && i < beats) {
-            marker.classList.add('minor');
-        }
-        beatMarkers.appendChild(marker);
+    for (let i = 1; i < beats; i++) {
+        const line = document.createElement('div');
+        line.className = 'melody-beat-line';
+        line.style.left = `${(i / totalDuration) * 100}%`;
+        beatGrid.appendChild(line);
     }
-    container.appendChild(beatMarkers);
+    rollArea.appendChild(beatGrid);
+
+    wrapper.appendChild(rollArea);
+    container.appendChild(wrapper);
 
     return container;
 }
