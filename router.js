@@ -246,12 +246,29 @@ function init() {
             strings: 'Slow attack • Cinematic',
             brass: 'Saw stab • House/Disco'
         };
+        const waveTypes = {
+            supersaw: 'sawtooth', reese: 'sawtooth', pluck: 'triangle',
+            pad: 'sine', lead: 'square', acid303: 'sawtooth', bass808: 'sine',
+            sub: 'sine', fmbass: 'sine', wobble: 'sawtooth',
+            bell: 'sine', organ: 'sine', strings: 'sawtooth', brass: 'sawtooth'
+        };
 
         document.getElementById('soundType').textContent = 'Synth';
         document.getElementById('soundName').textContent = names[synthType] || synthType;
         document.getElementById('description').textContent = descs[synthType] || note;
 
-        document.getElementById('waveform').classList.remove('hidden');
+        // Show appropriate visualization based on synth type
+        const canvas = document.getElementById('synthCanvas');
+        canvas.classList.remove('hidden');
+        const wave = waveTypes[synthType] || 'sawtooth';
+        if (synthType === 'supersaw' || synthType === 'reese') {
+            setTimeout(() => drawUnisonViz(canvas, 7, 0.3, '#f59e0b'), 50);
+        } else if (synthType === 'fmbass' || synthType === 'bell') {
+            setTimeout(() => drawFMViz(canvas, 2, 5, '#8b5cf6'), 50);
+        } else {
+            setTimeout(() => drawWaveform(canvas, wave), 50);
+        }
+
         playFn = () => playSynth(synthType, note);
     }
 
@@ -315,7 +332,10 @@ function init() {
         document.getElementById('soundName').textContent = driveAmount < 0.3 ? 'Warm' : driveAmount < 0.6 ? 'Driven' : 'Distorted';
         document.getElementById('description').textContent = `Drive: ${Math.round(driveAmount * 100)}%`;
 
-        document.getElementById('waveform').classList.remove('hidden');
+        const canvas = document.getElementById('synthCanvas');
+        canvas.classList.remove('hidden');
+        setTimeout(() => drawDriveViz(canvas, driveAmount, '#ef4444'), 50);
+
         playFn = () => playAdvancedSynth({ wave, note, drive: driveAmount });
     }
 
@@ -329,7 +349,10 @@ function init() {
         document.getElementById('soundName').textContent = bits <= 4 ? 'Crushed' : bits <= 8 ? 'Lo-Fi' : 'Light Crush';
         document.getElementById('description').textContent = `${bits}-bit`;
 
-        document.getElementById('waveform').classList.remove('hidden');
+        const canvas = document.getElementById('synthCanvas');
+        canvas.classList.remove('hidden');
+        setTimeout(() => drawBitcrushViz(canvas, bits, '#ec4899'), 50);
+
         playFn = () => playAdvancedSynth({ wave, note, bitcrush: bits });
     }
 
@@ -344,7 +367,10 @@ function init() {
         document.getElementById('soundName').textContent = voices <= 3 ? 'Thick' : voices <= 5 ? 'Wide' : 'Massive';
         document.getElementById('description').textContent = `${voices} voices • ${Math.round(detuneAmt * 100)}% detune`;
 
-        document.getElementById('waveform').classList.remove('hidden');
+        const canvas = document.getElementById('synthCanvas');
+        canvas.classList.remove('hidden');
+        setTimeout(() => drawUnisonViz(canvas, voices, detuneAmt, '#f59e0b'), 50);
+
         playFn = () => playAdvancedSynth({ wave, note, unison: voices, detune: detuneAmt });
     }
 
@@ -358,7 +384,10 @@ function init() {
         document.getElementById('soundName').textContent = noiseAmt < 0.3 ? 'Breathy' : noiseAmt < 0.6 ? 'Textured' : 'Noisy';
         document.getElementById('description').textContent = `Noise: ${Math.round(noiseAmt * 100)}%`;
 
-        document.getElementById('waveform').classList.remove('hidden');
+        const canvas = document.getElementById('synthCanvas');
+        canvas.classList.remove('hidden');
+        setTimeout(() => drawNoiseViz(canvas, noiseAmt, '#94a3b8'), 50);
+
         playFn = () => playAdvancedSynth({ wave, note, noise: noiseAmt });
     }
 
@@ -672,7 +701,9 @@ function init() {
         document.getElementById('soundName').textContent = names[reverbType] || reverbType;
         document.getElementById('description').textContent = 'Spatial depth effect';
 
-        document.getElementById('waveform').classList.remove('hidden');
+        const effectViz = document.getElementById('effectViz');
+        drawReverbViz(effectViz, reverbType, '#a78bfa');
+
         playFn = () => playWithReverb(reverbType, note);
     }
 
@@ -686,7 +717,9 @@ function init() {
         document.getElementById('soundName').textContent = `${delayTime} Echo`;
         document.getElementById('description').textContent = `Feedback: ${Math.round(feedback * 100)}%`;
 
-        document.getElementById('waveform').classList.remove('hidden');
+        const effectViz = document.getElementById('effectViz');
+        drawDelayViz(effectViz, delayTime, feedback, '#4ade80');
+
         playFn = () => playWithDelay(delayTime, feedback, note);
     }
 
@@ -699,7 +732,10 @@ function init() {
         document.getElementById('soundName').textContent = depth < 0.3 ? 'Subtle' : depth < 0.6 ? 'Lush' : 'Thick';
         document.getElementById('description').textContent = `Depth: ${Math.round(depth * 100)}%`;
 
-        document.getElementById('waveform').classList.remove('hidden');
+        const canvas = document.getElementById('synthCanvas');
+        canvas.classList.remove('hidden');
+        setTimeout(() => drawChorusViz(canvas, depth, 2, '#22d3ee'), 50);
+
         playFn = () => playWithChorus(depth, note);
     }
 
@@ -712,7 +748,10 @@ function init() {
         document.getElementById('soundName').textContent = rate < 0.3 ? 'Slow Sweep' : rate < 1 ? 'Medium' : 'Fast Jet';
         document.getElementById('description').textContent = `Rate: ${rate.toFixed(1)} Hz`;
 
-        document.getElementById('waveform').classList.remove('hidden');
+        const canvas = document.getElementById('synthCanvas');
+        canvas.classList.remove('hidden');
+        setTimeout(() => drawPhaserViz(canvas, rate, '#fb923c'), 50);
+
         playFn = () => playWithPhaser(rate, note);
     }
 
@@ -726,7 +765,9 @@ function init() {
         document.getElementById('soundName').textContent = position;
         document.getElementById('description').textContent = `Position: ${Math.round((panValue - 0.5) * 200)}%`;
 
-        document.getElementById('waveform').classList.remove('hidden');
+        const effectViz = document.getElementById('effectViz');
+        drawPanningViz(effectViz, panValue, '#f472b6');
+
         playFn = () => playWithPanning(panValue, note);
     }
 
@@ -739,7 +780,9 @@ function init() {
         document.getElementById('soundName').textContent = 'Pumping Effect';
         document.getElementById('description').textContent = `${pumpBeats} beats • ${bpm} BPM`;
 
-        document.getElementById('visualizer').classList.remove('hidden');
+        const effectViz = document.getElementById('effectViz');
+        drawSidechainViz(effectViz, pumpBeats, bpm, '#ef4444');
+
         playFn = () => playSidechain(pumpBeats, bpm);
     }
 
@@ -753,7 +796,10 @@ function init() {
         document.getElementById('soundName').textContent = `Ratio ${ratio}:1`;
         document.getElementById('description').textContent = `Mod Index: ${modIndex}`;
 
-        document.getElementById('waveform').classList.remove('hidden');
+        const canvas = document.getElementById('synthCanvas');
+        canvas.classList.remove('hidden');
+        setTimeout(() => drawFMViz(canvas, ratio, modIndex, '#8b5cf6'), 50);
+
         playFn = () => playFM(ratio, modIndex, note);
     }
 
@@ -766,7 +812,10 @@ function init() {
         document.getElementById('soundName').textContent = `${modFreq} Hz`;
         document.getElementById('description').textContent = 'Metallic/bell-like effect';
 
-        document.getElementById('waveform').classList.remove('hidden');
+        const canvas = document.getElementById('synthCanvas');
+        canvas.classList.remove('hidden');
+        setTimeout(() => drawRingModViz(canvas, modFreq, '#f43f5e'), 50);
+
         playFn = () => playRingMod(modFreq, note);
     }
 
@@ -780,7 +829,10 @@ function init() {
         document.getElementById('soundName').textContent = 'Pulse Width Mod';
         document.getElementById('description').textContent = `Width: ${Math.round(pulseWidth * 100)}% • Rate: ${rate}Hz`;
 
-        document.getElementById('waveform').classList.remove('hidden');
+        const canvas = document.getElementById('synthCanvas');
+        canvas.classList.remove('hidden');
+        setTimeout(() => drawPWMViz(canvas, pulseWidth, rate, '#10b981'), 50);
+
         playFn = () => playPWM(pulseWidth, rate, note);
     }
 
@@ -794,7 +846,11 @@ function init() {
         document.getElementById('soundName').textContent = vowelNames[vowel] || vowel;
         document.getElementById('description').textContent = 'Vowel synthesis';
 
-        document.getElementById('waveform').classList.remove('hidden');
+        // Formants use multiple bandpass filters - show filter curves
+        const canvas = document.getElementById('synthCanvas');
+        canvas.classList.remove('hidden');
+        setTimeout(() => drawFilterCurve(canvas, 'bandpass', 800, 8, '#fbbf24'), 50);
+
         playFn = () => playFormant(vowel, note);
     }
 
@@ -952,8 +1008,18 @@ function init() {
         document.getElementById('soundName').textContent = pattern.name;
         document.getElementById('description').textContent = `${root}${octave} • ${pattern.bpm} BPM`;
 
-        document.getElementById('waveform').classList.remove('hidden');
-        playFn = () => playBassline(patternName, root, octave);
+        // Filter out rest notes (-1) and create durations (all 16th notes = 0.25 beats)
+        const playableNotes = pattern.notes.filter(n => n >= 0);
+        const durations = playableNotes.map(() => 0.25);
+
+        // Draw bassline piano roll
+        const basslineRoll = document.getElementById('basslineRoll');
+        drawMelodyRoll(basslineRoll, playableNotes, durations, root, '#a78bfa');
+
+        playFn = () => {
+            playBassline(patternName, root, octave);
+            animateMelodyRoll(basslineRoll, durations, pattern.bpm);
+        };
     }
 
     // MELODY MODE
@@ -987,7 +1053,13 @@ function init() {
         document.getElementById('soundName').textContent = preset.name;
         document.getElementById('description').textContent = `${preset.bpm} BPM characteristic sound`;
 
-        document.getElementById('waveform').classList.remove('hidden');
+        // Show waveform based on synth wave type and apply envelope visualization
+        const canvas = document.getElementById('synthCanvas');
+        canvas.classList.remove('hidden');
+        setTimeout(() => {
+            drawWaveform(canvas, preset.synth.wave);
+        }, 50);
+
         playFn = () => playGenre(genreName, note);
     }
 
