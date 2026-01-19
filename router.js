@@ -967,8 +967,14 @@ function init() {
         document.getElementById('soundName').textContent = phrase.name;
         document.getElementById('description').textContent = `${root}${octave} • ${phrase.notes.length} notes`;
 
-        document.getElementById('waveform').classList.remove('hidden');
-        playFn = () => playMelody(phraseName, root, octave);
+        // Draw piano roll visualization
+        const melodyRoll = document.getElementById('melodyRoll');
+        drawMelodyRoll(melodyRoll, phrase.notes, phrase.durations, root, '#e94560');
+
+        playFn = () => {
+            playMelody(phraseName, root, octave);
+            animateMelodyRoll(melodyRoll, phrase.durations, 100);
+        };
     }
 
     // GENRE MODE

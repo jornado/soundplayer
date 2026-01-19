@@ -330,3 +330,143 @@ function drawHarmonics(canvas, harmonics, color = '#e94560') {
         ctx.fillText(i + 1, x + barWidth / 2, height - 2);
     });
 }
+
+// Piano roll style melody visualization
+function drawMelodyRoll(container, notes, durations, rootName = 'C', color = '#e94560') {
+    container.innerHTML = '';
+    container.classList.remove('hidden');
+
+    // Calculate pitch range for scaling
+    const minNote = Math.min(...notes);
+    const maxNote = Math.max(...notes);
+    const range = maxNote - minNote || 12; // Default to octave if all same note
+
+    // Total duration for time scaling
+    const totalDuration = durations.reduce((a, b) => a + b, 0);
+
+    // Create piano roll lanes (pitch markers)
+    const laneContainer = document.createElement('div');
+    laneContainer.className = 'melody-lanes';
+
+    // Determine semitones to show
+    const paddedMin = minNote - 2;
+    const paddedMax = maxNote + 2;
+    const semitoneRange = paddedMax - paddedMin;
+
+    // Create horizontal pitch lines
+    for (let i = 0; i <= semitoneRange; i++) {
+        const lane = document.createElement('div');
+        lane.className = 'melody-lane';
+        const semitone = paddedMax - i;
+        // Highlight octave lines
+        if (semitone % 12 === 0) {
+            lane.classList.add('octave-line');
+        }
+        laneContainer.appendChild(lane);
+    }
+    container.appendChild(laneContainer);
+
+    // Create note blocks
+    const notesContainer = document.createElement('div');
+    notesContainer.className = 'melody-notes';
+
+    let currentTime = 0;
+    notes.forEach((semitone, i) => {
+        const block = document.createElement('div');
+        block.className = 'melody-note';
+        block.dataset.index = i;
+
+        // Position: left is time-based, bottom is pitch-based
+        const left = (currentTime / totalDuration) * 100;
+        const width = (durations[i] / totalDuration) * 100;
+        const bottom = ((semitone - paddedMin) / semitoneRange) * 100;
+
+        block.style.left = `${left}%`;
+        block.style.width = `${Math.max(width - 0.5, 1)}%`;
+        block.style.bottom = `${bottom}%`;
+        block.style.setProperty('--note-color', color);
+
+        // Color variation based on pitch
+        const hueShift = (semitone % 12) * 15;
+        block.style.filter = `hue-rotate(${hueShift}deg)`;
+
+        notesContainer.appendChild(block);
+        currentTime += durations[i];
+    });
+    container.appendChild(notesContainer);
+
+    // Add contour line connecting notes
+    const contourSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    contourSvg.classList.add('melody-contour');
+    contourSvg.setAttribute('viewBox', '0 0 100 100');
+    contourSvg.setAttribute('preserveAspectRatio', 'none');
+
+    // Build path
+    let pathD = '';
+    currentTime = 0;
+    notes.forEach((semitone, i) => {
+        const x = ((currentTime + durations[i] / 2) / totalDuration) * 100;
+        const y = 100 - ((semitone - paddedMin) / semitoneRange) * 100;
+
+        if (i === 0) {
+            pathD = `M ${x} ${y}`;
+        } else {
+            pathD += ` L ${x} ${y}`;
+        }
+        currentTime += durations[i];
+    });
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', pathD);
+    path.setAttribute('stroke', color);
+    path.setAttribute('stroke-width', '1.5');
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-linecap', 'round');
+    path.setAttribute('stroke-linejoin', 'round');
+    path.setAttribute('opacity', '0.6');
+    contourSvg.appendChild(path);
+    container.appendChild(contourSvg);
+
+    // Add beat markers
+    const beatMarkers = document.createElement('div');
+    beatMarkers.className = 'melody-beats';
+    const beats = Math.ceil(totalDuration);
+    for (let i = 0; i <= beats; i++) {
+        const marker = document.createElement('div');
+        marker.className = 'melody-beat-marker';
+        marker.style.left = `${(i / totalDuration) * 100}%`;
+        if (i > 0 && i < beats) {
+            marker.classList.add('minor');
+        }
+        beatMarkers.appendChild(marker);
+    }
+    container.appendChild(beatMarkers);
+
+    return container;
+}
+
+// Animate melody roll during playback
+function animateMelodyRoll(container, durations, bpm = 100) {
+    const beatDuration = 60 / bpm;
+    const noteBlocks = container.querySelectorAll('.melody-note');
+
+    let currentTime = 0;
+    durations.forEach((duration, i) => {
+        const noteElement = noteBlocks[i];
+        if (!noteElement) return;
+
+        // Highlight note when it plays
+        setTimeout(() => {
+            // Remove playing from all
+            noteBlocks.forEach(n => n.classList.remove('playing'));
+            noteElement.classList.add('playing');
+        }, currentTime * beatDuration * 1000);
+
+        currentTime += duration;
+    });
+
+    // Clear all highlights after melody completes
+    setTimeout(() => {
+        noteBlocks.forEach(n => n.classList.remove('playing'));
+    }, currentTime * beatDuration * 1000);
+}
