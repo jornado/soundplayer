@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Music Sound Player</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- iOS Audio Unlock Overlay -->
+    <div class="ios-unlock hidden" id="iosUnlock">
+        <div class="ios-unlock-text">Tap to enable audio</div>
+        <button class="ios-unlock-btn">🔊 Enable Sound</button>
+    </div>
+
+    <div class="container">
+        <div class="sound-type" id="soundType">Chord</div>
+        <div class="sound-name" id="soundName">C Major</div>
+        <div class="description" id="description">C4 • E4 • G4</div>
+
+        <div class="controls" id="controls"></div>
+
+        <button class="play-btn" id="playBtn">▶ Play</button>
+
+        <div class="piano hidden" id="piano"></div>
+        <div class="visualizer hidden" id="visualizer"></div>
+        <div class="waveform hidden" id="waveform"><div class="wave-line"></div></div>
+        <div class="drum-grid hidden" id="drumGrid"></div>
+        <canvas class="synth-canvas hidden" id="synthCanvas"></canvas>
+        <div class="synth-display hidden" id="synthDisplay"></div>
+        <div class="compare-grid hidden" id="compareGrid"></div>
+    </div>
+
+    <!-- Load modules in dependency order -->
+    <script src="data.js"></script>
+    <script src="instruments.js"></script>
+    <script src="visualizations.js"></script>
+    <script src="ui.js"></script>
+    <script src="playback.js"></script>
+    <script src="effects.js"></script>
+    <script src="router.js"></script>
+</body>
+</html>
